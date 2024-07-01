@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, Collection } = require("mongodb");
 const port = process.env.PORT || 6001;
 require("dotenv").config();
 console.log(process.env.B);
@@ -27,6 +27,10 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    //database and Collections
+    const menuCollection = client.db("demo-foodi-client").collection("menus");
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
