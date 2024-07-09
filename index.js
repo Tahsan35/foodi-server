@@ -2,49 +2,43 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 
-const { MongoClient, ServerApiVersion, Collection } = require("mongodb");
 const port = process.env.PORT || 6001;
 require("dotenv").config();
-console.log(process.env.B);
+//console.log(process.env.B);
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 
 //middleware
 app.use(cors());
 app.use(express.json());
 
-//= `mongodb+srv://@cluster0.0x7tcme.mongodb.net/?appName=Cluster0`;
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.0x7tcme.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+// mongodb configuration using mongoose
+mongoose
+  .connect(
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.0x7tcme.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+  )
+  .then(console.log("MongoDB Connected Successfully!"))
+  .catch((error) => console.log("Error connecting to MongoDB", error));
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
+// jwt authentication
+app.post("/jwt", async (req, res) => {
+  const user = req.body;
+  const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: "1hr",
+  });
+  res.send({ token });
 });
 
-async function run() {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-
-    //database and Collections
-    const menuCollection = client.db("demo-foodi-client").collection("menus");
-
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
-}
-run().catch(console.dir);
+//   import routes here
+const menuRoutes = require("./api/routes/menuRoutes");
+const cartRoutes = require("./api/routes/cartRoutes");
+const userRoutes = require("./api/routes/userRoutes");
+app.use("/menu", menuRoutes);
+app.use("/carts", cartRoutes);
+app.use("/users", userRoutes);
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Hello Foodi Client Server!");
 });
 
 app.listen(port, () => {
